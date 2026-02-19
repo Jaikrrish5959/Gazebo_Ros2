@@ -1,0 +1,115 @@
+import random
+import os
+
+def generate_world():
+    # Define the path for the SDF file
+    path = '/home/jaikrrishs/robot_ws/src/my_robot_gazebo/worlds/arena.sdf'
+    
+    # Start defining the SDF content
+    sdf = """<?xml version="1.0" ?>
+<sdf version="1.8">
+    <world name="arena_world">
+        <physics name="1ms" type="ignored">
+            <max_step_size>0.001</max_step_size>
+            <real_time_factor>1.0</real_time_factor>
+        </physics>
+        <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+        <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+        <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+        <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+            <render_engine>ogre2</render_engine>
+        </plugin>
+
+        <light type="directional" name="sun">
+            <cast_shadows>true</cast_shadows>
+            <pose>0 0 10 0 0 0</pose>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <direction>-0.5 0.1 -0.9</direction>
+        </light>
+
+        <model name="ground_plane">
+            <static>true</static>
+            <link name="link">
+                <collision name="collision">
+                    <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+                </collision>
+                <visual name="visual">
+                    <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+                    <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+                </visual>
+            </link>
+        </model>
+
+        <!-- WALLS -->
+        <model name="wall_n"><pose>10 12.5 0.5 0 0 0</pose><static>true</static><link name="link"><visual name="v"><geometry><box><size>25 0.5 1</size></box></geometry><material><ambient>0.5 0.5 0.5 1</ambient></material></visual><collision name="c"><geometry><box><size>25 0.5 1</size></box></geometry></collision></link></model>
+        <model name="wall_s"><pose>10 -12.5 0.5 0 0 0</pose><static>true</static><link name="link"><visual name="v"><geometry><box><size>25 0.5 1</size></box></geometry><material><ambient>0.5 0.5 0.5 1</ambient></material></visual><collision name="c"><geometry><box><size>25 0.5 1</size></box></geometry></collision></link></model>
+        <model name="wall_e"><pose>22.5 0 0.5 0 0 0</pose><static>true</static><link name="link"><visual name="v"><geometry><box><size>0.5 25 1</size></box></geometry><material><ambient>0.5 0.5 0.5 1</ambient></material></visual><collision name="c"><geometry><box><size>0.5 25 1</size></box></geometry></collision></link></model>
+        <model name="wall_w"><pose>-2.5 0 0.5 0 0 0</pose><static>true</static><link name="link"><visual name="v"><geometry><box><size>0.5 25 1</size></box></geometry><material><ambient>0.5 0.5 0.5 1</ambient></material></visual><collision name="c"><geometry><box><size>0.5 25 1</size></box></geometry></collision></link></model>
+
+        <!-- TARGET BOX -->
+        <model name="target_box">
+            <pose>10 0 0.1 0 0 0</pose>
+            <link name="link">
+                <inertial>
+                    <mass>0.1</mass>
+                    <inertia>
+                        <ixx>0.0001</ixx><ixy>0</ixy><ixz>0</ixz>
+                        <iyy>0.0001</iyy><iyz>0</iyz>
+                        <izz>0.0001</izz>
+                    </inertia>
+                </inertial>
+                <visual name="v">
+                    <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
+                    <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
+                </visual>
+                <collision name="c">
+                    <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
+                    <surface>
+                        <friction>
+                            <ode><mu>100</mu><mu2>100</mu2></ode>
+                        </friction>
+                    </surface>
+                </collision>
+            </link>
+        </model>
+"""
+    
+    # OBSTACLES loop
+    for i in range(4):
+        # Generate random positions
+        x = random.uniform(2, 8)
+        y = random.uniform(-6, 6)
+        
+        sdf += f"""
+        <model name="obs_{i}">
+            <static>true</static>
+            <pose>{x:.2f} {y:.2f} 0.25 0 0 0</pose>
+            <link name="l">
+                <visual name="v">
+                    <geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+                    <material><ambient>0 0 0 1</ambient></material>
+                </visual>
+                <collision name="c">
+                    <geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+                </collision>
+            </link>
+        </model>
+"""
+
+    sdf += """
+    </world>
+</sdf>
+"""
+
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    
+    # Write to file
+    with open(path, 'w') as f:
+        f.write(sdf)
+    
+    print(f"Generated world at {path}")
+
+if __name__ == "__main__":
+    generate_world()
