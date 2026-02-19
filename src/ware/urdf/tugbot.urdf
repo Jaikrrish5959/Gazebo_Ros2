@@ -1,0 +1,173 @@
+<robot name="tugbot">
+  <!-- Dummy link for fixing to the world or odom frame if needed, but base_link is standard -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://ware/models/tugbot/meshes/base/tugbot_simp.dae"/>
+      </geometry>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://ware/models/tugbot/meshes/base/movai_logo.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://ware/models/tugbot/meshes/base/tugbot_simp.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="-0.1 0 0.1" rpy="0 0 0"/>
+      <mass value="46.2"/>
+      <inertia ixx="1.55925" ixy="0" ixz="0" iyy="1.55925" iyz="0" izz="1.55925"/>
+    </inertial>
+  </link>
+  
+  <link name="scan_front">
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <cylinder radius="0.05" length="0.05"/>
+        </geometry>
+        <material name="red">
+            <color rgba="1 0 0 1"/>
+        </material>
+    </visual>
+  </link>
+  <joint name="scan_front_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="scan_front"/>
+    <origin xyz="0.221 0 0.1404" rpy="0 0 0"/>
+  </joint>
+
+  <link name="scan_back">
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <cylinder radius="0.05" length="0.05"/>
+        </geometry>
+        <material name="red">
+            <color rgba="1 0 0 1"/>
+        </material>
+    </visual>
+  </link>
+  <joint name="scan_back_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="scan_back"/>
+    <origin xyz="-0.2075 0 0.205" rpy="0 0 3.141592654"/>
+  </joint>
+
+  <link name="scan_omni">
+    <visual>
+        <origin xyz="0 0 -0.035" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://ware/models/tugbot/meshes/VLP16_base_1.dae"/>
+        </geometry>
+    </visual>
+    <visual>
+        <origin xyz="0 0 -0.035" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://ware/models/tugbot/meshes/VLP16_base_2.dae"/>
+        </geometry>
+    </visual>
+    <visual>
+        <origin xyz="0 0 -0.035" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://ware/models/tugbot/meshes/VLP16_scan.dae"/>
+        </geometry>
+    </visual>
+  </link>
+  <joint name="scan_omni_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="scan_omni"/>
+    <origin xyz="-0.1855 0 0.5318" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Wheels -->
+  <link name="wheel_left">
+    <visual>
+      <origin xyz="0 0 -0.03" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://ware/models/tugbot/meshes/wheel/wheel.dae" scale="0.98 0.98 1.0"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="wheel_left_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_left"/>
+    <origin xyz="0 0.257 0.195" rpy="-1.570796327 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="wheel_right">
+    <visual>
+      <origin xyz="0 0 -0.03" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://ware/models/tugbot/meshes/wheel/wheel.dae" scale="0.98 0.98 1.0"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="wheel_right_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_right"/>
+    <origin xyz="0 -0.257 0.195" rpy="1.570796327 0 0"/>
+    <axis xyz="0 0 -1"/>
+  </joint>
+
+  <link name="wheel_front">
+    <visual>
+      <geometry>
+        <sphere radius="0.025"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="wheel_front_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="wheel_front"/>
+    <origin xyz="0.145 0 0.0345" rpy="0 0 0"/>
+  </joint>
+
+  <link name="wheel_back">
+    <visual>
+      <geometry>
+        <sphere radius="0.035"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="wheel_back_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="wheel_back"/>
+    <origin xyz="-0.225 0 0.035" rpy="0 0 0"/>
+  </joint>
+
+  <!-- LiDAR Frame Aliases to match Gazebo published frames -->
+  <link name="tugbot/scan_front/scan_front"/>
+  <joint name="scan_front_alias" type="fixed">
+    <parent link="scan_front"/>
+    <child link="tugbot/scan_front/scan_front"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="tugbot/scan_back/scan_back"/>
+  <joint name="scan_back_alias" type="fixed">
+    <parent link="scan_back"/>
+    <child link="tugbot/scan_back/scan_back"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="tugbot/scan_omni/scan_omni"/>
+  <joint name="scan_omni_alias" type="fixed">
+    <parent link="scan_omni"/>
+    <child link="tugbot/scan_omni/scan_omni"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+</robot>
