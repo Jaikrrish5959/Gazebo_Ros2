@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="hydraulic_mobile_robot">
+
+    <!-- Include sub-components -->
+    <xacro:include filename="$(find hydraulic_bot)/urdf/mobile_base.xacro" />
+    <xacro:include filename="$(find hydraulic_bot)/urdf/hydraulic_arm.xacro" />
+
+    <!-- Create the robot -->
+    <xacro:mobile_base />
+    <xacro:hydraulic_arm parent="base_link" />
+    
+    <!-- Gazebo plugins (Global) -->
+    <gazebo>
+        <!-- Joint State Publisher -->
+        <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+            <topic>joint_states</topic>
+        </plugin>
+    </gazebo>
+
+</robot>
