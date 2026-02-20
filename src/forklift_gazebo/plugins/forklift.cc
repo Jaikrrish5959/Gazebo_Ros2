@@ -3,7 +3,6 @@
 #include <gz/sim/System.hh>
 #include <gz/sim/components/Joint.hh>
 #include <gz/sim/components/JointPosition.hh>
-#include <gz/sim/components/JointPositionReset.hh>
 #include <gz/sim/components/JointVelocityCmd.hh>
 #include <gz/sim/components/Name.hh>
 
@@ -38,8 +37,14 @@ private:
   gz::sim::Entity wheel_rr_{gz::sim::kNullEntity};
 
   std::string model_name_;
-  std::map<std::string, double> joint_commands_;
+  // Target positions for lift/shift
+  double target_lift_{0.0};
+  double target_shift_{0.0};
   std::mutex command_mutex_;
+
+  // Max velocity for lift/shift joints (m/s)
+  static constexpr double LIFT_SPEED  = 0.05;   // slow physical lift
+  static constexpr double SHIFT_SPEED = 0.03;
 
   double cmd_linear_{0.0};
   double cmd_angular_{0.0};
@@ -76,7 +81,7 @@ public:
     RCLCPP_INFO(this->ros_node_->get_logger(), "%s: Plugin loaded.",
                 this->model_name_.c_str());
 
-    // Subscribers
+    // Subscribers — receive target positions, move joints to them via velocity
     this->joint_state_sub_ =
         this->ros_node_->create_subscription<sensor_msgs::msg::JointState>(
             "/joint_states", 10,
@@ -86,7 +91,10 @@ public:
               std::lock_guard<std::mutex> lock(this->command_mutex_);
               for (size_t i = 0;
                    i < msg->name.size() && i < msg->position.size(); ++i) {
-                this->joint_commands_[msg->name[i]] = msg->position[i];
+                if (msg->name[i] == "lift")
+                  this->target_lift_  = msg->position[i];
+                else if (msg->name[i] == "shift")
+                  this->target_shift_ = msg->position[i];
               }
             });
 
@@ -153,24 +161,39 @@ public:
       }
     }
 
-    // --- LIFT/SHIFT ---
+    // --- LIFT/SHIFT: velocity-based position control ---
+    // This moves joints physically (respects collisions) instead of teleporting.
     {
       std::lock_guard<std::mutex> lock(this->command_mutex_);
-      for (const auto &[jname, pos] : this->joint_commands_) {
-        gz::sim::Entity je = gz::sim::kNullEntity;
-        if (jname == "shift")
-          je = this->shift_joint_;
-        else if (jname == "lift")
-          je = this->lift_joint_;
-        if (je != gz::sim::kNullEntity) {
-          auto c = _ecm.Component<gz::sim::components::JointPositionReset>(je);
-          if (!c)
-            _ecm.CreateComponent(
-                je, gz::sim::components::JointPositionReset({pos}));
-          else
-            c->Data()[0] = pos;
+
+      auto driveJointToTarget = [&](
+          gz::sim::Entity je, double target, double speed) {
+        if (je == gz::sim::kNullEntity) return;
+
+        // Read current joint position
+        auto pos_comp = _ecm.Component<gz::sim::components::JointPosition>(je);
+        if (!pos_comp || pos_comp->Data().empty()) {
+          // Ensure position component exists so we can read it next tick
+          _ecm.CreateComponent(je, gz::sim::components::JointPosition({0.0}));
+          return;
         }
-      }
+        double current = pos_comp->Data()[0];
+        double error   = target - current;
+
+        // Dead-zone: stop if close enough
+        double vel = 0.0;
+        if (std::abs(error) > 0.002)
+          vel = (error > 0 ? 1.0 : -1.0) * speed;
+
+        auto vc = _ecm.Component<gz::sim::components::JointVelocityCmd>(je);
+        if (!vc)
+          _ecm.CreateComponent(je, gz::sim::components::JointVelocityCmd({vel}));
+        else
+          vc->Data()[0] = vel;
+      };
+
+      driveJointToTarget(this->lift_joint_,  this->target_lift_,  LIFT_SPEED);
+      driveJointToTarget(this->shift_joint_, this->target_shift_, SHIFT_SPEED);
     }
 
     // --- WHEEL VELOCITY ---
