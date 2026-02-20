@@ -1,0 +1,31 @@
+# ROS 2 gitignore
+
+# Build and Install
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# C++
+*.o
+*.so
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS specific
+.DS_Store
+
+# Local log files
+simulation.log
+
+# Colcon
+COLCON_IGNORE

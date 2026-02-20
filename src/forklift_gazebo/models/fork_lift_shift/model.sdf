@@ -1,0 +1,210 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='fork_lift_shift'>
+    <pose frame=''>0.0 0.0 0.2 0.0 0.0 0.0</pose>
+
+    <!-- All-in-one plugin: lift/shift + wheel drive + odometry -->
+    <plugin name="forklift_gazebo::ForkLiftPlugin" filename="libForkLiftPlugin.so"/>
+
+    <!-- Main chassis -->
+    <link name='fixed_box'>
+      <pose frame=''>-0.02 0.0 0.0 0 0 0</pose>
+      <inertial>
+        <mass>50</mass>
+        <inertia>
+          <ixx>0.166667</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.166667</iyy><iyz>0</iyz><izz>0.166667</izz>
+        </inertia>
+        <pose frame=''>0 0 0 0 0 0</pose>
+      </inertial>
+      <visual name='visual'>
+        <geometry><box><size>0.2 0.2 0.3</size></box></geometry>
+        <material>
+          <ambient>0.3 0.3 0.3 1</ambient>
+          <diffuse>0.7 0.7 0.7 1</diffuse>
+          <specular>0.01 0.01 0.01 1</specular>
+        </material>
+      </visual>
+      <collision name='collision'>
+        <geometry><box><size>0.2 0.2 0.3</size></box></geometry>
+      </collision>
+    </link>
+
+    <!-- Front Left Wheel -->
+    <link name="wheel_front_left">
+      <pose>0.1 0.13 -0.15 -1.5707963 0 0</pose>
+      <inertial>
+        <mass>2</mass>
+        <inertia>
+          <ixx>0.000354</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.000354</iyy><iyz>0</iyz><izz>0.00025</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>0.04</length></cylinder></geometry>
+        <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>0.04</length></cylinder></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+      </visual>
+    </link>
+    <joint name="wheel_front_left_joint" type="revolute">
+      <parent>fixed_box</parent>
+      <child>wheel_front_left</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit><lower>-1.79769e+308</lower><upper>1.79769e+308</upper></limit>
+      </axis>
+    </joint>
+
+    <!-- Front Right Wheel -->
+    <link name="wheel_front_right">
+      <pose>0.1 -0.13 -0.15 -1.5707963 0 0</pose>
+      <inertial>
+        <mass>2</mass>
+        <inertia>
+          <ixx>0.000354</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.000354</iyy><iyz>0</iyz><izz>0.00025</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>0.04</length></cylinder></geometry>
+        <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>0.04</length></cylinder></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+      </visual>
+    </link>
+    <joint name="wheel_front_right_joint" type="revolute">
+      <parent>fixed_box</parent>
+      <child>wheel_front_right</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit><lower>-1.79769e+308</lower><upper>1.79769e+308</upper></limit>
+      </axis>
+    </joint>
+
+    <!-- Rear Left Wheel -->
+    <link name="wheel_rear_left">
+      <pose>-0.1 0.13 -0.15 -1.5707963 0 0</pose>
+      <inertial>
+        <mass>2</mass>
+        <inertia>
+          <ixx>0.000354</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.000354</iyy><iyz>0</iyz><izz>0.00025</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>0.04</length></cylinder></geometry>
+        <surface><friction><ode><mu>0.5</mu><mu2>0.5</mu2></ode></friction></surface>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>0.04</length></cylinder></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+      </visual>
+    </link>
+    <joint name="wheel_rear_left_joint" type="revolute">
+      <parent>fixed_box</parent>
+      <child>wheel_rear_left</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit><lower>-1.79769e+308</lower><upper>1.79769e+308</upper></limit>
+      </axis>
+    </joint>
+
+    <!-- Rear Right Wheel -->
+    <link name="wheel_rear_right">
+      <pose>-0.1 -0.13 -0.15 -1.5707963 0 0</pose>
+      <inertial>
+        <mass>2</mass>
+        <inertia>
+          <ixx>0.000354</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.000354</iyy><iyz>0</iyz><izz>0.00025</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>0.04</length></cylinder></geometry>
+        <surface><friction><ode><mu>0.5</mu><mu2>0.5</mu2></ode></friction></surface>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>0.04</length></cylinder></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+      </visual>
+    </link>
+    <joint name="wheel_rear_right_joint" type="revolute">
+      <parent>fixed_box</parent>
+      <child>wheel_rear_right</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit><lower>-1.79769e+308</lower><upper>1.79769e+308</upper></limit>
+      </axis>
+    </joint>
+
+    <!-- Base Fork sub-model -->
+    <model name='base_fork'>
+      <link name='base_fork_link'>
+        <pose frame=''>0 0 -0.08 0 0 0</pose>
+        <inertial>
+          <mass>25</mass>
+          <inertia>
+            <ixx>0.166667</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.166667</iyy><iyz>0</iyz><izz>0.166667</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry><mesh><uri>model://fork_lift_shift/stl/base.STL</uri><scale>1 1 1</scale></mesh></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+        </visual>
+        <collision name='collision'>
+          <geometry><mesh><uri>model://fork_lift_shift/stl/base.STL</uri></mesh></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Fork sub-model -->
+    <model name='fork'>
+      <link name='fork_link'>
+        <pose frame=''>0.005 0 -0.2 0 0 0</pose>
+        <inertial>
+          <mass>10</mass>
+          <inertia>
+            <ixx>0.166667</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.166667</iyy><iyz>0</iyz><izz>0.166667</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry><mesh><uri>model://fork_lift_shift/stl/fork.STL</uri><scale>1 1 1</scale></mesh></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+        </visual>
+        <collision name='collision'>
+          <geometry><mesh><uri>model://fork_lift_shift/stl/fork.STL</uri></mesh></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <joint name='lift' type='prismatic'>
+      <parent>base_fork::base_fork_link</parent>
+      <child>fork::fork_link</child>
+      <pose frame=''>0.34 0 0.25 0 0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit><lower>0</lower><upper>0.25</upper><effort>-1</effort><velocity>-1</velocity></limit>
+      </axis>
+    </joint>
+
+    <joint name='shift' type='prismatic'>
+      <parent>fixed_box</parent>
+      <child>base_fork::base_fork_link</child>
+      <pose frame=''>0.08 0.01 0.12 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit><lower>-0.1</lower><upper>0.1</upper><effort>-1</effort><velocity>-1</velocity></limit>
+      </axis>
+    </joint>
+
+    <static>0</static>
+    <allow_auto_disable>1</allow_auto_disable>
+  </model>
+</sdf>
