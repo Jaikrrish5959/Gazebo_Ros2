@@ -1,0 +1,14 @@
+# Kinematics solver configuration for Freddy's arms
+# Uses KDLKinematicsPlugin for both Kinova Gen3 chains
+
+left_arm:
+  kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
+  kinematics_solver_search_resolution: 0.005
+  kinematics_solver_timeout: 0.05
+  kinematics_solver_attempts: 3
+
+right_arm:
+  kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
+  kinematics_solver_search_resolution: 0.005
+  kinematics_solver_timeout: 0.05
+  kinematics_solver_attempts: 3
