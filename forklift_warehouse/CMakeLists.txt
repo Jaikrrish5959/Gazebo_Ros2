@@ -16,7 +16,11 @@ find_package(rclpy REQUIRED)
 
 # Install Python scripts
 install(PROGRAMS
-  src/box_transport.py
+  src/random_world_generator.py
+  src/lidar_box_detector.py
+  src/reactive_navigator.py
+  src/adaptive_box_transport.py
+  src/ontology_reasoner.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -35,9 +39,19 @@ install(DIRECTORY models/
   DESTINATION share/${PROJECT_NAME}/models
 )
 
-# Install config files
+# Install config files (moveit + rviz)
 install(DIRECTORY config/
   DESTINATION share/${PROJECT_NAME}/config
+)
+
+# Install URDF overlay files
+install(DIRECTORY urdf/
+  DESTINATION share/${PROJECT_NAME}/urdf
+)
+
+# Install ontology files
+install(DIRECTORY ontology/
+  DESTINATION share/${PROJECT_NAME}/ontology
 )
 
 if(BUILD_TESTING)

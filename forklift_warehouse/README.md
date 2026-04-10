@@ -1,12 +1,25 @@
-# Freddy Warehouse — Dual-Arm Box Transport Simulation
+# Adaptive Warehouse Robot — LiDAR + Semantic Reasoning
 
-A ROS 2 Jazzy + Gazebo Harmonic simulation featuring the **Freddy** dual-arm mobile manipulator performing shelf-to-shelf box transport in a warehouse environment.
+A ROS 2 Jazzy + Gazebo Harmonic simulation featuring the **Freddy** dual-arm mobile manipulator performing **autonomous**, sensor-driven box transport in a dynamically generated warehouse. The robot uses LiDAR perception to discover boxes, avoids obstacles ethically, and validates actions through an OWL ontology reasoning layer.
+
+## Features
+
+- **Single Command Launch** — the entire autonomy stack runs automatically via `warehouse.launch.py`.
+- **Random Exploration** — navigator drives robot randomly through the warehouse to search for the pickup table.
+- **LiDAR-based Table Detection** — filters specific cluster widths to identify tables while isolating from walls/shelves.
+- **Dynamic warehouse** — randomized shelf, table, box, and obstacle positions each run.
+- **Autonomous Pickup** - non-blocking transport pipeline orchestration via action server async calls.
+- **OWL ontology reasoning** — CORA-aligned semantic validation (Robot ⊆ ∃hasSensor.LiDAR, ∀avoids.(Obstacle ⊔ Human))
+- **Real-time RViz** — LaserScan, TF, detected table markers, robot model.
 
 ## Robot: Freddy
 
-- **Base**: KELO omnidirectional platform (4 drives, 8 hub wheels, 500kg payload)
-- **Arms**: 2× Kinova Gen3 7-DOF manipulators
-- **Control**: `gz_ros2_control` with `joint_trajectory_controller` (arms) + `velocity_controller` (base)
+| Property | Value |
+|----------|-------|
+| **Base** | KELO omnidirectional platform (4 drives, 8 hub wheels, 500kg payload) |
+| **Arms** | 2× Kinova Gen3 7-DOF manipulators |
+| **Sensor** | GPU LiDAR — 720 samples, 360°, 10m range, 10Hz |
+| **Control** | `gz_ros2_control` with trajectory controllers (arms) + velocity controller (base) |
 
 ## Prerequisites
 
@@ -15,6 +28,9 @@ A ROS 2 Jazzy + Gazebo Harmonic simulation featuring the **Freddy** dual-arm mob
 sudo apt install ros-jazzy-ros2-control ros-jazzy-ros2-controllers \
   ros-jazzy-gz-ros2-control ros-jazzy-ros-gz ros-jazzy-moveit
 
+# Python (OWL reasoning)
+pip install owlready2
+
 # Verify
 echo $ROS_DISTRO  # Should print: jazzy
 ```
@@ -22,7 +38,6 @@ echo $ROS_DISTRO  # Should print: jazzy
 ## Workspace Setup
 
 ```bash
-# Create workspace
 mkdir -p ~/freddy_ws/src
 cd ~/freddy_ws/src
 
@@ -35,18 +50,51 @@ git clone --branch simulation https://github.com/a2s-institute/freddy_descriptio
 git clone --branch gz-devel https://github.com/a2s-institute/ros2_kortex.git
 git clone --branch sim-dev https://github.com/a2s-institute/gz_ros2_control.git
 
-# Set Gazebo version
 export GZ_VERSION=harmonic
 
-# Build
+```bash
 cd ~/freddy_ws
 colcon build --symlink-install
 source install/setup.bash
 ```
 
+## How It Works
+│  Spawns shelves + pickup table + target box + obstacles  │
+└────────────────────┬─────────────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────────────┐
+│  Gazebo Harmonic  ←→  ros_gz_bridge                      │
+│  /lidar → /scan (LaserScan)                              │
+└────────────────────┬─────────────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────────────┐
+│  LiDAR Table Detector (lidar_box_detector.py)            │
+│  Clusters scan → filters table size → publishes:        │
+│    /detected_objects (MarkerArray)                        │
+│    /detected_box_poses (PoseArray)                       │
+└────────────────────┬─────────────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────────────┐
+│  Wall-Follow Navigator (reactive_navigator.py)           │
+│  States: RANDOM_EXPLORE → TABLE_DETECTED → APPROACH → ARRIVED │
+│  Publishes: /nav_status                                  │
+└────────────────────┬─────────────────────────────────────┘
+                     ▼
+┌──────────────────────────────────────────────────────────┐
+│  Adaptive Box Transport (adaptive_box_transport.py)      │
+│  Orchestrates: 25s wait → search → reach → pick → place  │
+└──────────────────────────────────────────────────────────┘
+         ↕
+┌──────────────────────────────────────────────────────────┐
+│  Ontology Reasoner (ontology_reasoner.py)                │
+│  OWL validation: LiDAR check, box-shelf, ethics          │
+│  Service: /query_ontology   Status: /ontology_status     │
+└──────────────────────────────────────────────────────────┘
+```
+
 ## Launch
 
-### 1. Warehouse Simulation (Freddy + Gazebo)
+### 1. Full Simulation (Gazebo + LiDAR + RViz + Controllers)
 
 ```bash
 cd ~/freddy_ws
@@ -55,90 +103,98 @@ source install/setup.bash
 ros2 launch forklift_warehouse warehouse.launch.py
 ```
 
-This launches:
-- Gazebo Harmonic with the warehouse world
-- Freddy robot spawned at origin
-- Controllers: `joint_state_broadcaster`, `arm_left/right_joint_trajectory_controller`, `base_velocity_controller`
+Each launch generates a fresh randomized warehouse layout.
 
-### 2. Keyboard Teleop (Manual Control)
+### 2. LiDAR Box Detector
 
-In a separate terminal:
 ```bash
-cd ~/freddy_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-ros2 run freddy_gazebo freddy_control
+ros2 run forklift_warehouse lidar_box_detector.py
 ```
 
-Controls:
-| Key | Action |
-|-----|--------|
-| `q` / `a` / `z` | Switch to left arm / right arm / base |
-| `w e r t y u i o` | Increment joint 1-8 |
-| `s d f g h j k l` | Decrement joint 1-8 |
-| `+` / `-` | Increase / decrease step size |
+### 3. Reactive Navigator
 
-### 3. MoveIt 2 (Motion Planning)
-
-In a separate terminal:
 ```bash
-cd ~/freddy_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
+ros2 run forklift_warehouse reactive_navigator.py
+```
+
+### 4. Autonomous Box Transport
+
+```bash
+ros2 run forklift_warehouse adaptive_box_transport.py
+```
+
+### 5. Ontology Reasoner
+
+```bash
+ros2 run forklift_warehouse ontology_reasoner.py
+# Query it:
+ros2 service call /query_ontology std_srvs/srv/Trigger
+```
+
+### 6. MoveIt 2 (Optional — Motion Planning UI)
+
+```bash
 ros2 launch forklift_warehouse moveit.launch.py
 ```
 
-### 4. Box Transport (Automated Pipeline)
+## Topics
 
-In a separate terminal:
-```bash
-cd ~/freddy_ws
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-ros2 run forklift_warehouse box_transport.py
-```
-
-**Pipeline phases:**
-1. Move arm to home
-2. Drive to source shelf (shelf_0)
-3. Pre-grasp position
-4. Grasp box (contact-based attach)
-5. Lift to carry position
-6. Drive to destination shelf (shelf_3)
-7. Place box
-8. Return arm to home
+| Topic | Type | Description |
+|-------|------|-------------|
+| `/scan` | `sensor_msgs/LaserScan` | 360° LiDAR scan |
+| `/detected_objects` | `visualization_msgs/MarkerArray` | Detected table markers for RViz |
+| `/detected_box_poses` | `geometry_msgs/PoseArray` | Detected table positions |
+| `/transport_status` | `std_msgs/String` | Adaptive transport state |
+| `/nav_status` | `std_msgs/String` | Navigator state machine status |
+| `/base_velocity_controller/commands` | `std_msgs/Float64MultiArray` | Base wheel velocities |
+| `/ontology_status` | `std_msgs/String` | Ontology system health |
+| `/tf` | `tf2_msgs/TFMessage` | Robot transform tree |
 
 ## Architecture
 
 ```
 forklift_warehouse/
 ├── config/
-│   └── moveit/
-│       ├── freddy.srdf          # Planning groups, named poses
-│       ├── kinematics.yaml      # KDL solver config
-│       ├── ompl_planning.yaml   # OMPL planners
-│       └── moveit_controllers.yaml  # Controller mapping
+│   ├── moveit/
+│   │   ├── freddy.srdf
+│   │   ├── kinematics.yaml
+│   │   ├── ompl_planning.yaml
+│   │   └── moveit_controllers.yaml
+│   └── rviz/
+│       └── warehouse.rviz
 ├── launch/
-│   ├── warehouse.launch.py      # Main launch (Gazebo + Freddy + controllers)
-│   └── moveit.launch.py         # MoveIt 2 launch
+│   ├── warehouse.launch.py        # Main launch (world gen + Gazebo + RViz)
+│   └── moveit.launch.py           # MoveIt 2 launch
+├── ontology/
+│   └── warehouse_robot.owl        # CORA-aligned OWL ontology
 ├── src/
-│   └── box_transport.py         # Automated transport pipeline
+│   ├── random_world_generator.py  # Randomized SDF generator
+│   ├── lidar_box_detector.py      # LiDAR → box detection
+│   ├── reactive_navigator.py      # Obstacle avoidance + navigation
+│   ├── adaptive_box_transport.py  # Autonomous pickup pipeline
+│   └── ontology_reasoner.py       # OWL semantic reasoning
+├── urdf/
+│   └── freddy_lidar.urdf.xacro   # LiDAR sensor overlay
 ├── worlds/
-│   └── warehouse.sdf            # Warehouse with shelves, box, destination marker
+│   └── warehouse.sdf              # Base world template
 ├── CMakeLists.txt
 ├── package.xml
 └── README.md
 ```
 
-## World Objects
+## Ontology (warehouse_robot.owl)
 
-| Object | Position | Description |
-|--------|----------|-------------|
-| `transport_box` | (-3.5, 2.3, 0.85) | Red 20cm cube, 1kg — **pick this up** |
-| Multiple shelves | Various | Standard warehouse shelving |
+| Class | Constraint |
+|-------|-----------|
+| `Robot` | `∃hasSensor.LiDAR` — must have LiDAR sensor |
+| `Box` | `∃locatedOn.Shelf` — must be on a shelf |
+| `Robot` | `∀avoids.(Obstacle ⊔ Human)` — ethical avoidance |
+| `Human` | subclass of `Obstacle` |
 
 ## Troubleshooting
 
-- **Controllers not loading**: Ensure `freddy_gazebo` is built and the URDF has `gz_ros2_control` tags
-- **Robot falls through floor**: Check world physics `max_step_size` is ≤ 0.01
-- **MoveIt can't find joints**: Verify `joint_state_broadcaster` is active via `ros2 control list_controllers`
+- **No `/scan` data**: Check that `freddy_lidar.urdf.xacro` is installed and the bridge is running
+- **Controllers not loading**: Ensure `freddy_gazebo` is built and URDF has `gz_ros2_control` tags
+- **Robot falls through floor**: Check world physics `max_step_size` ≤ 0.01
+- **Owlready2 error**: Run `pip install owlready2`
+- **Same world each run**: Check `/tmp/warehouse_dynamic.sdf` is being regenerated

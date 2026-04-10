@@ -1,0 +1,274 @@
+<?xml version="1.0"?>
+<!--
+  Warehouse Robot Ontology (CORA-aligned)
+  Defines classes, properties, and constraints for the adaptive warehouse system.
+  
+  Classes: Robot, Box, Shelf, Obstacle, Human, Sensor, LiDAR, Capability, Task, Location
+  Properties: hasSensor, detects, locatedOn, locatedAt, avoids, performs, hasCapability
+  Constraints:
+    - Robot ⊆ ∃hasSensor.LiDAR
+    - Box ⊆ ∃locatedOn.Shelf
+    - Robot ⊆ ∀avoids.(Obstacle ⊔ Human)
+-->
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+         xmlns:wr="http://warehouse-robot.org/ontology#"
+         xml:base="http://warehouse-robot.org/ontology">
+
+  <owl:Ontology rdf:about="http://warehouse-robot.org/ontology">
+    <rdfs:label>Warehouse Robot Ontology</rdfs:label>
+    <rdfs:comment>CORA-aligned ontology for adaptive warehouse robot with LiDAR perception and ethical constraints.</rdfs:comment>
+  </owl:Ontology>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!--  CLASSES                                                 -->
+  <!-- ════════════════════════════════════════════════════════ -->
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#Robot">
+    <rdfs:label>Robot</rdfs:label>
+    <!-- Constraint: Robot ⊆ ∃hasSensor.LiDAR -->
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://warehouse-robot.org/ontology#hasSensor"/>
+        <owl:someValuesFrom rdf:resource="http://warehouse-robot.org/ontology#LiDAR"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <!-- Constraint: Robot ⊆ ∀avoids.(Obstacle ⊔ Human) -->
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://warehouse-robot.org/ontology#avoids"/>
+        <owl:allValuesFrom>
+          <owl:Class>
+            <owl:unionOf rdf:parseType="Collection">
+              <owl:Class rdf:about="http://warehouse-robot.org/ontology#Obstacle"/>
+              <owl:Class rdf:about="http://warehouse-robot.org/ontology#Human"/>
+            </owl:unionOf>
+          </owl:Class>
+        </owl:allValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#Box">
+    <rdfs:label>Box</rdfs:label>
+    <!-- Constraint: Box ⊆ ∃locatedOn.Shelf -->
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://warehouse-robot.org/ontology#locatedOn"/>
+        <owl:someValuesFrom rdf:resource="http://warehouse-robot.org/ontology#Shelf"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#Shelf">
+    <rdfs:label>Shelf</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#Obstacle">
+    <rdfs:label>Obstacle</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#Human">
+    <rdfs:label>Human</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://warehouse-robot.org/ontology#Obstacle"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#Sensor">
+    <rdfs:label>Sensor</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#LiDAR">
+    <rdfs:label>LiDAR</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://warehouse-robot.org/ontology#Sensor"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#Capability">
+    <rdfs:label>Capability</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#Task">
+    <rdfs:label>Task</rdfs:label>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://warehouse-robot.org/ontology#Location">
+    <rdfs:label>Location</rdfs:label>
+  </owl:Class>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!--  OBJECT PROPERTIES                                       -->
+  <!-- ════════════════════════════════════════════════════════ -->
+
+  <owl:ObjectProperty rdf:about="http://warehouse-robot.org/ontology#hasSensor">
+    <rdfs:label>hasSensor</rdfs:label>
+    <rdfs:domain rdf:resource="http://warehouse-robot.org/ontology#Robot"/>
+    <rdfs:range rdf:resource="http://warehouse-robot.org/ontology#Sensor"/>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="http://warehouse-robot.org/ontology#detects">
+    <rdfs:label>detects</rdfs:label>
+    <rdfs:domain rdf:resource="http://warehouse-robot.org/ontology#Sensor"/>
+    <rdfs:range rdf:resource="http://warehouse-robot.org/ontology#Box"/>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="http://warehouse-robot.org/ontology#locatedOn">
+    <rdfs:label>locatedOn</rdfs:label>
+    <rdfs:domain rdf:resource="http://warehouse-robot.org/ontology#Box"/>
+    <rdfs:range rdf:resource="http://warehouse-robot.org/ontology#Shelf"/>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="http://warehouse-robot.org/ontology#locatedAt">
+    <rdfs:label>locatedAt</rdfs:label>
+    <rdfs:range rdf:resource="http://warehouse-robot.org/ontology#Location"/>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="http://warehouse-robot.org/ontology#avoids">
+    <rdfs:label>avoids</rdfs:label>
+    <rdfs:domain rdf:resource="http://warehouse-robot.org/ontology#Robot"/>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="http://warehouse-robot.org/ontology#performs">
+    <rdfs:label>performs</rdfs:label>
+    <rdfs:domain rdf:resource="http://warehouse-robot.org/ontology#Robot"/>
+    <rdfs:range rdf:resource="http://warehouse-robot.org/ontology#Task"/>
+  </owl:ObjectProperty>
+
+  <owl:ObjectProperty rdf:about="http://warehouse-robot.org/ontology#hasCapability">
+    <rdfs:label>hasCapability</rdfs:label>
+    <rdfs:domain rdf:resource="http://warehouse-robot.org/ontology#Robot"/>
+    <rdfs:range rdf:resource="http://warehouse-robot.org/ontology#Capability"/>
+  </owl:ObjectProperty>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!--  DATA PROPERTIES                                         -->
+  <!-- ════════════════════════════════════════════════════════ -->
+
+  <owl:DatatypeProperty rdf:about="http://warehouse-robot.org/ontology#hasWeight">
+    <rdfs:label>hasWeight</rdfs:label>
+    <rdfs:domain rdf:resource="http://warehouse-robot.org/ontology#Box"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+  </owl:DatatypeProperty>
+
+  <owl:DatatypeProperty rdf:about="http://warehouse-robot.org/ontology#hasPayloadCapacity">
+    <rdfs:label>hasPayloadCapacity</rdfs:label>
+    <rdfs:domain rdf:resource="http://warehouse-robot.org/ontology#Robot"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+  </owl:DatatypeProperty>
+
+  <owl:DatatypeProperty rdf:about="http://warehouse-robot.org/ontology#xCoord">
+    <rdfs:label>xCoord</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+  </owl:DatatypeProperty>
+
+  <owl:DatatypeProperty rdf:about="http://warehouse-robot.org/ontology#yCoord">
+    <rdfs:label>yCoord</rdfs:label>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+  </owl:DatatypeProperty>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!--  INDIVIDUALS                                             -->
+  <!-- ════════════════════════════════════════════════════════ -->
+
+  <!-- Robot -->
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#Freddy">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Robot"/>
+    <rdfs:label>Freddy</rdfs:label>
+    <wr:hasSensor rdf:resource="http://warehouse-robot.org/ontology#LiDAR1"/>
+    <wr:hasPayloadCapacity rdf:datatype="http://www.w3.org/2001/XMLSchema#float">500.0</wr:hasPayloadCapacity>
+  </owl:NamedIndividual>
+
+  <!-- Sensor -->
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#LiDAR1">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#LiDAR"/>
+    <rdfs:label>LiDAR1</rdfs:label>
+    <wr:detects rdf:resource="http://warehouse-robot.org/ontology#Box_1"/>
+    <wr:detects rdf:resource="http://warehouse-robot.org/ontology#Box_2"/>
+    <wr:detects rdf:resource="http://warehouse-robot.org/ontology#Box_3"/>
+    <wr:detects rdf:resource="http://warehouse-robot.org/ontology#Box_4"/>
+  </owl:NamedIndividual>
+
+  <!-- Shelves -->
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#Shelf_A">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Shelf"/>
+    <rdfs:label>Shelf A</rdfs:label>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#Shelf_B">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Shelf"/>
+    <rdfs:label>Shelf B</rdfs:label>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#Shelf_C">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Shelf"/>
+    <rdfs:label>Shelf C</rdfs:label>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#Shelf_D">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Shelf"/>
+    <rdfs:label>Shelf D</rdfs:label>
+  </owl:NamedIndividual>
+
+  <!-- Boxes -->
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#Box_1">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Box"/>
+    <rdfs:label>Box 1</rdfs:label>
+    <wr:locatedOn rdf:resource="http://warehouse-robot.org/ontology#Shelf_A"/>
+    <wr:hasWeight rdf:datatype="http://www.w3.org/2001/XMLSchema#float">1.0</wr:hasWeight>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#Box_2">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Box"/>
+    <rdfs:label>Box 2</rdfs:label>
+    <wr:locatedOn rdf:resource="http://warehouse-robot.org/ontology#Shelf_B"/>
+    <wr:hasWeight rdf:datatype="http://www.w3.org/2001/XMLSchema#float">1.0</wr:hasWeight>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#Box_3">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Box"/>
+    <rdfs:label>Box 3</rdfs:label>
+    <wr:locatedOn rdf:resource="http://warehouse-robot.org/ontology#Shelf_C"/>
+    <wr:hasWeight rdf:datatype="http://www.w3.org/2001/XMLSchema#float">1.0</wr:hasWeight>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#Box_4">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Box"/>
+    <rdfs:label>Box 4</rdfs:label>
+    <wr:locatedOn rdf:resource="http://warehouse-robot.org/ontology#Shelf_D"/>
+    <wr:hasWeight rdf:datatype="http://www.w3.org/2001/XMLSchema#float">1.0</wr:hasWeight>
+  </owl:NamedIndividual>
+
+  <!-- Capabilities -->
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#PickCapability">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Capability"/>
+    <rdfs:label>Pick Capability</rdfs:label>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#PlaceCapability">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Capability"/>
+    <rdfs:label>Place Capability</rdfs:label>
+  </owl:NamedIndividual>
+
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#NavigateCapability">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Capability"/>
+    <rdfs:label>Navigate Capability</rdfs:label>
+  </owl:NamedIndividual>
+
+  <!-- Link robot to capabilities -->
+  <rdf:Description rdf:about="http://warehouse-robot.org/ontology#Freddy">
+    <wr:hasCapability rdf:resource="http://warehouse-robot.org/ontology#PickCapability"/>
+    <wr:hasCapability rdf:resource="http://warehouse-robot.org/ontology#PlaceCapability"/>
+    <wr:hasCapability rdf:resource="http://warehouse-robot.org/ontology#NavigateCapability"/>
+  </rdf:Description>
+
+  <!-- Tasks -->
+  <owl:NamedIndividual rdf:about="http://warehouse-robot.org/ontology#BoxTransportTask">
+    <rdf:type rdf:resource="http://warehouse-robot.org/ontology#Task"/>
+    <rdfs:label>Box Transport Task</rdfs:label>
+  </owl:NamedIndividual>
+
+  <rdf:Description rdf:about="http://warehouse-robot.org/ontology#Freddy">
+    <wr:performs rdf:resource="http://warehouse-robot.org/ontology#BoxTransportTask"/>
+  </rdf:Description>
+
+</rdf:RDF>

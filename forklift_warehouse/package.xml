@@ -2,8 +2,8 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>forklift_warehouse</name>
-  <version>1.0.0</version>
-  <description>Warehouse simulation with Freddy dual-arm mobile manipulator</description>
+  <version>2.0.0</version>
+  <description>Adaptive warehouse robot with LiDAR perception, semantic reasoning, and ethical navigation</description>
   <maintainer email="jaikrrish5959@gmail.com">jaikrrishs</maintainer>
   <license>Apache-2.0</license>
 
@@ -16,7 +16,9 @@
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>trajectory_msgs</depend>
+  <depend>visualization_msgs</depend>
   <depend>controller_manager</depend>
   <depend>joint_state_broadcaster</depend>
   <depend>joint_trajectory_controller</depend>
