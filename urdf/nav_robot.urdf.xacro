@@ -1,0 +1,270 @@
+<?xml version="1.0"?>
+<!--
+  Simple Navigation Robot — Differential Drive + LiDAR
+  A lightweight robot for warehouse navigation and object detection.
+  No arms, no complex dependencies — just a base, wheels, and a sensor.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="nav_robot">
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  PROPERTIES                                             -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <xacro:property name="body_length" value="0.5"/>
+  <xacro:property name="body_width"  value="0.35"/>
+  <xacro:property name="body_height" value="0.15"/>
+  <xacro:property name="body_mass"   value="10.0"/>
+
+  <xacro:property name="wheel_radius" value="0.08"/>
+  <xacro:property name="wheel_width"  value="0.04"/>
+  <xacro:property name="wheel_mass"   value="0.5"/>
+
+  <xacro:property name="caster_radius" value="0.04"/>
+  <xacro:property name="caster_mass"   value="0.2"/>
+
+  <xacro:property name="lidar_height" value="0.05"/>
+  <xacro:property name="lidar_radius" value="0.04"/>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  BASE LINK                                              -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <link name="base_footprint"/>
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+      <material name="chassis_blue">
+        <color rgba="0.1 0.3 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="${body_mass}"/>
+      <inertia
+        ixx="${body_mass*(body_width*body_width + body_height*body_height)/12.0}"
+        ixy="0" ixz="0"
+        iyy="${body_mass*(body_length*body_length + body_height*body_height)/12.0}"
+        iyz="0"
+        izz="${body_mass*(body_length*body_length + body_width*body_width)/12.0}"/>
+    </inertial>
+  </link>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius + 0.01}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  DRIVE WHEELS                                           -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <xacro:macro name="wheel" params="name y_offset">
+    <link name="${name}_wheel_link">
+      <visual>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="wheel_dark">
+          <color rgba="0.2 0.2 0.2 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <inertial>
+        <mass value="${wheel_mass}"/>
+        <inertia
+          ixx="${wheel_mass*(3*wheel_radius*wheel_radius + wheel_width*wheel_width)/12.0}"
+          ixy="0" ixz="0"
+          iyy="${wheel_mass*(3*wheel_radius*wheel_radius + wheel_width*wheel_width)/12.0}"
+          iyz="0"
+          izz="${wheel_mass*wheel_radius*wheel_radius/2.0}"/>
+      </inertial>
+    </link>
+    <joint name="${name}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${name}_wheel_link"/>
+      <origin xyz="0 ${y_offset} ${-body_height/2.0}" rpy="${-pi/2.0} 0 0"/>
+      <axis xyz="0 0 1"/>
+      <dynamics damping="0.1" friction="0.1"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:wheel name="left"  y_offset="${body_width/2.0 + wheel_width/2.0}"/>
+  <xacro:wheel name="right" y_offset="${-body_width/2.0 - wheel_width/2.0}"/>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  FRONT CASTER                                           -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <link name="caster_link">
+    <visual>
+      <geometry>
+        <sphere radius="${caster_radius}"/>
+      </geometry>
+      <material name="caster_grey">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="${caster_radius}"/>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.0</mu>
+            <mu2>0.0</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+    <inertial>
+      <mass value="${caster_mass}"/>
+      <inertia
+        ixx="${2.0*caster_mass*caster_radius*caster_radius/5.0}"
+        ixy="0" ixz="0"
+        iyy="${2.0*caster_mass*caster_radius*caster_radius/5.0}"
+        iyz="0"
+        izz="${2.0*caster_mass*caster_radius*caster_radius/5.0}"/>
+    </inertial>
+  </link>
+
+  <joint name="caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="caster_link"/>
+    <origin xyz="${body_length/2.0 - caster_radius} 0 ${-body_height/2.0 - wheel_radius + caster_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  LIDAR SENSOR                                           -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
+      </geometry>
+      <material name="lidar_black">
+        <color rgba="0.1 0.1 0.1 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.15"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0"
+               iyy="0.0001" iyz="0"
+               izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="0 0 ${body_height/2.0 + lidar_height/2.0}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Gazebo GPU LiDAR sensor -->
+  <gazebo reference="lidar_link">
+    <sensor name="gpu_lidar" type="gpu_lidar">
+      <always_on>true</always_on>
+      <update_rate>10</update_rate>
+      <topic>scan</topic>
+      <gz_frame_id>lidar_link</gz_frame_id>
+      <visualize>true</visualize>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.10</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+    </sensor>
+  </gazebo>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  IMU SENSOR                                             -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <link name="imu_link">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0"
+               iyy="0.00001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>50</update_rate>
+      <topic>imu</topic>
+      <gz_frame_id>imu_link</gz_frame_id>
+    </sensor>
+  </gazebo>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  GAZEBO DIFF-DRIVE PLUGIN                               -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <gazebo>
+    <!-- Differential drive controller -->
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>${body_width + wheel_width}</wheel_separation>
+      <wheel_radius>${wheel_radius}</wheel_radius>
+      <max_linear_acceleration>1.0</max_linear_acceleration>
+      <max_angular_acceleration>2.0</max_angular_acceleration>
+      <odom_publish_frequency>20</odom_publish_frequency>
+      <topic>cmd_vel</topic>
+      <odom_topic>odom</odom_topic>
+      <tf_topic>tf</tf_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+    </plugin>
+
+    <!-- Joint state publisher -->
+    <plugin filename="gz-sim-joint-state-publisher-system"
+            name="gz::sim::systems::JointStatePublisher">
+      <joint_name>left_wheel_joint</joint_name>
+      <joint_name>right_wheel_joint</joint_name>
+      <topic>joint_states</topic>
+    </plugin>
+  </gazebo>
+
+</robot>
