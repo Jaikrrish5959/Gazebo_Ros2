@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- ================= PALM ================= -->
+  <link name="palm_link">
+    <visual>
+      <geometry>
+        <box size="0.12 0.08 0.02"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.12 0.08 0.02"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ============== FINGER MACRO ============== -->
+  <xacro:macro name="finger" params="name x y">
+
+    <!-- Proximal -->
+    <link name="${name}_proximal">
+      <visual>
+        <geometry>
+          <cylinder length="0.04" radius="0.007"/>
+        </geometry>
+      </visual>
+    </link>
+
+    <joint name="${name}_mcp" type="revolute">
+      <parent link="palm_link"/>
+      <child link="${name}_proximal"/>
+      <origin xyz="${x} ${y} 0.01"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="0" upper="1.5" effort="1" velocity="1"/>
+    </joint>
+
+    <!-- Middle -->
+    <link name="${name}_middle">
+      <visual>
+        <geometry>
+          <cylinder length="0.03" radius="0.006"/>
+        </geometry>
+      </visual>
+    </link>
+
+    <joint name="${name}_pip" type="revolute">
+      <parent link="${name}_proximal"/>
+      <child link="${name}_middle"/>
+      <origin xyz="0 0 0.04"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="0" upper="1.5"/>
+    </joint>
+
+    <!-- Distal -->
+    <link name="${name}_distal">
+      <visual>
+        <geometry>
+          <cylinder length="0.02" radius="0.005"/>
+        </geometry>
+      </visual>
+    </link>
+
+    <joint name="${name}_dip" type="revolute">
+      <parent link="${name}_middle"/>
+      <child link="${name}_distal"/>
+      <origin xyz="0 0 0.03"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="0" upper="1.5"/>
+    </joint>
+
+  </xacro:macro>
+
+  <!-- ============== FIVE FINGERS ============== -->
+  <finger name="thumb"  x="-0.04" y="-0.03"/>
+  <finger name="index"  x="0.00"  y="-0.03"/>
+  <finger name="middle" x="0.03"  y="-0.03"/>
+  <finger name="ring"   x="0.06"  y="-0.03"/>
+  <finger name="pinky"  x="0.09"  y="-0.03"/>
+
+</robot>

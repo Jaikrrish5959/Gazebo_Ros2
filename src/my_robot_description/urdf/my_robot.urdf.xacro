@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot name="my_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Include the hand -->
+  <xacro:include filename="$(find my_robot_description)/urdf/hands/five_finger_hand.urdf.xacro"/>
+
+  <!-- ================= ARM ================= -->
+  <link name="arm_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.3" radius="0.03"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- ================= WRIST ================= -->
+  <joint name="wrist_joint" type="fixed">
+    <parent link="arm_link"/>
+    <child link="palm_link"/>
+    <origin xyz="0 0 0.15"/>
+  </joint>
+
+</robot>
