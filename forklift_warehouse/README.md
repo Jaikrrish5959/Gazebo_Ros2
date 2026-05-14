@@ -1,6 +1,6 @@
 # Adaptive Warehouse Robot — LiDAR + Semantic Reasoning
 
-A ROS 2 Jazzy + Gazebo Harmonic simulation featuring the **Freddy** dual-arm mobile manipulator performing **autonomous**, sensor-driven box transport in a dynamically generated warehouse. The robot uses LiDAR perception to discover boxes, avoids obstacles ethically, and validates actions through an OWL ontology reasoning layer.
+A ROS 2 Jazzy + Gazebo Harmonic simulation featuring the **Freddy** dual-arm mobile manipulator performing **autonomous**, sensor-driven box transport in a dynamically generated warehouse. The robot uses LiDAR perception to discover boxes, avoids obstacles ethically, and validates actions through an OWL ontology reasoning layer. update
 
 ## Features
 
